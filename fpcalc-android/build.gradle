@@ -10,7 +10,7 @@ android {
         minSdkVersion 19
         targetSdkVersion 28
         versionCode 3
-        versionName "1.0.2"
+        versionName "1.1.0"
         buildToolsVersion "28.0.3"
         externalNativeBuild {
             sourceSets {
