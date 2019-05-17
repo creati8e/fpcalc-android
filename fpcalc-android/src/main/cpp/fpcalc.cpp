@@ -15,9 +15,10 @@
 
 #define LOGI(...)   __android_log_print((int)ANDROID_LOG_INFO, "CHROMAPRINT", __VA_ARGS__)
 
-extern void jni_output(const char* format, ...);
-	#define fprintf(unused,...) jni_output(__VA_ARGS__)
-	#define printf(...)         jni_output(__VA_ARGS__)
+extern void jni_output(const char *format, ...);
+
+#define fprintf(unused, ...) jni_output(__VA_ARGS__)
+#define printf(...)         jni_output(__VA_ARGS__)
 
 
 using namespace chromaprint;
@@ -43,24 +44,23 @@ static ChromaprintAlgorithm g_algorithm = CHROMAPRINT_ALGORITHM_DEFAULT;
 
 const char *g_help =
         "Usage: %s [OPTIONS] FILE [FILE...]\n"
-                "\n"
-                "Generate fingerprints from audio files/streams.\n"
-                "\n"
-                "Options:\n"
-                "  -format NAME   Set the input format name\n"
-                "  -rate NUM      Set the sample rate of the input audio\n"
-                "  -channels NUM  Set the number of channels in the input audio\n"
-                "  -length SECS   Restrict the duration of the processed input audio (default 120)\n"
-                "  -chunk SECS    Split the input audio into chunks of this duration\n"
-                "  -algorithm NUM Set the algorigthm method (default 2)\n"
-                "  -overlap       Overlap the chunks slightly to make sure audio on the edges is fingerprinted\n"
-                "  -ts            Output UNIX timestamps for chunked results, useful when fingerprinting real-time audio stream\n"
-                "  -raw           Output fingerprints in the uncompressed format\n"
-                "  -json          Print the output in JSON format\n"
-                "  -text          Print the output in text format\n"
-                "  -plain         Print the just the fingerprint in text format\n"
-                "  -version       Print version information\n"
-;
+        "\n"
+        "Generate fingerprints from audio files/streams.\n"
+        "\n"
+        "Options:\n"
+        "  -format NAME   Set the input format name\n"
+        "  -rate NUM      Set the sample rate of the input audio\n"
+        "  -channels NUM  Set the number of channels in the input audio\n"
+        "  -length SECS   Restrict the duration of the processed input audio (default 120)\n"
+        "  -chunk SECS    Split the input audio into chunks of this duration\n"
+        "  -algorithm NUM Set the algorigthm method (default 2)\n"
+        "  -overlap       Overlap the chunks slightly to make sure audio on the edges is fingerprinted\n"
+        "  -ts            Output UNIX timestamps for chunked results, useful when fingerprinting real-time audio stream\n"
+        "  -raw           Output fingerprints in the uncompressed format\n"
+        "  -json          Print the output in JSON format\n"
+        "  -text          Print the output in text format\n"
+        "  -plain         Print the just the fingerprint in text format\n"
+        "  -version       Print version information\n";
 
 static void ParseOptions(int &argc, char **argv) {
     int j = 1;
@@ -76,7 +76,8 @@ static void ParseOptions(int &argc, char **argv) {
             if (value > 0) {
                 g_input_channels = value;
             } else {
-                fprintf(stderr, "ERROR: The argument for %s must be a non-zero positive number\n", argv[i]);
+                fprintf(stderr, "ERROR: The argument for %s must be a non-zero positive number\n",
+                        argv[i]);
                 return;
             }
             i++;
@@ -110,7 +111,7 @@ static void ParseOptions(int &argc, char **argv) {
         } else if ((!strcmp(argv[i], "-algorithm") || !strcmp(argv[i], "-a")) && i + 1 < argc) {
             auto value = atoi(argv[i + 1]);
             if (value >= 1 && value <= 5) {
-                g_algorithm = (ChromaprintAlgorithm)(value - 1);
+                g_algorithm = (ChromaprintAlgorithm) (value - 1);
             } else {
                 fprintf(stderr, "ERROR: The argument for %s must be 1 - 5\n", argv[i]);
                 return;
@@ -133,7 +134,8 @@ static void ParseOptions(int &argc, char **argv) {
         } else if (!strcmp(argv[i], "-v") || !strcmp(argv[i], "-version")) {
             fprintf(stdout, "fpcalc version %s\n", chromaprint_get_version());
             exit(0);
-        } else if (!strcmp(argv[i], "-h") || !strcmp(argv[i], "-help") || !strcmp(argv[i], "--help")) {
+        } else if (!strcmp(argv[i], "-h") || !strcmp(argv[i], "-help") ||
+                   !strcmp(argv[i], "--help")) {
             fprintf(stdout, g_help, argv[0]);
             exit(0);
         } else {
@@ -153,7 +155,13 @@ static void ParseOptions(int &argc, char **argv) {
     argc = j;
 }
 
-void PrintResult(ChromaprintContext *ctx, FFmpegAudioReader &reader, bool first, double timestamp, double duration) {
+void PrintResult(
+        ChromaprintContext *ctx,
+        FFmpegAudioReader &reader,
+        bool first,
+        double timestamp,
+        double duration
+) {
     std::string tmp_fp;
     const char *fp;
     bool dealloc_fp = false;
@@ -221,9 +229,11 @@ void PrintResult(ChromaprintContext *ctx, FFmpegAudioReader &reader, bool first,
         case JSON:
             if (g_max_chunk_duration != 0) {
                 if (g_raw) {
-                    printf("{\"timestamp\": %.2f, \"duration\": %.2f, \"fingerprint\": [%s]}\n", timestamp, duration, fp);
+                    printf("{\"timestamp\": %.2f, \"duration\": %.2f, \"fingerprint\": [%s]}\n",
+                           timestamp, duration, fp);
                 } else {
-                    printf("{\"timestamp\": %.2f, \"duration\": %.2f, \"fingerprint\": \"%s\"}\n", timestamp, duration, fp);
+                    printf("{\"timestamp\": %.2f, \"duration\": %.2f, \"fingerprint\": \"%s\"}\n",
+                           timestamp, duration, fp);
                 }
             } else {
                 if (g_raw) {
@@ -334,7 +344,8 @@ void ProcessFile(ChromaprintContext *ctx, FFmpegAudioReader &reader, const char 
                 return;
             }
 
-            const auto chunk_duration = (chunk_size - extra_chunk_limit) * 1.0 / reader.GetSampleRate() + overlap;
+            const auto chunk_duration =
+                    (chunk_size - extra_chunk_limit) * 1.0 / reader.GetSampleRate() + overlap;
             PrintResult(ctx, reader, first_chunk, ts, chunk_duration);
             got_results = true;
 
@@ -388,7 +399,8 @@ void ProcessFile(ChromaprintContext *ctx, FFmpegAudioReader &reader, const char 
     }
 
     if (chunk_size > 0) {
-        const auto chunk_duration = (chunk_size - extra_chunk_limit) * 1.0 / reader.GetSampleRate() + overlap;
+        const auto chunk_duration =
+                (chunk_size - extra_chunk_limit) * 1.0 / reader.GetSampleRate() + overlap;
         PrintResult(ctx, reader, first_chunk, ts, chunk_duration);
         got_results = true;
     } else if (first_chunk) {
