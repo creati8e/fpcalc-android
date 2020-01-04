@@ -52,10 +52,23 @@ class FpCalc private constructor(private val context: Context) {
         )
     }
 
+    fun makeFingerprint(args: Array<String>): String {
+        return if (loadLibrary()) {
+            runCatching {
+                fpCalc(args)
+            }.getOrElse { e ->
+                Log.e("FpCalc", "error", e)
+                ""
+            }
+        } else {
+            ""
+        }
+    }
+
     fun makeFingerprint(filepath: String): String {
         return if (loadLibrary()) {
             runCatching {
-                fpCalc(arrayOf("-json", filepath))
+                fpCalc(arrayOf("-json", filepath, "-ignore-errors"))
             }.getOrElse { e ->
                 Log.e("FpCalc", "error", e)
                 ""
@@ -75,6 +88,7 @@ class FpCalc private constructor(private val context: Context) {
         }
     }
 
+    @Suppress("MemberVisibilityCanBePrivate")
     external fun fpCalc(args: Array<String>): String
 
 }
